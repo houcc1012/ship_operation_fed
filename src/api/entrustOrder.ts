@@ -17,6 +17,14 @@ export const getSupplierList = async (params: any) => {
   return post("/supplier/list", params);
 };
 
+export const addSupplier = async (params: any) => {
+  return post("/supplier/addSupplier", params);
+};
+
+export const deleteSupplier = async (params: any) => {
+  return post("/supplier/deleteSupplier", params);
+};
+
 
 export const getSupplierWorkerList = async (params: any) => {
   return post("/supplier/workerList", params);

@@ -1,54 +1,76 @@
 <template>
-    <div class="operation-management">
-      <!-- 页面头部 -->
-      <div class="page-header">
-        <h1>作业方管理</h1>
-        <div class="header-actions">
-          <el-input v-model="searchValue" clearable placeholder="搜索作业方名称" style="width: 200px;" />
-          <el-button type="primary" @click="refreshSupplierList">筛选</el-button>
-        </div>
+  <div class="operation-management">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1>作业方管理</h1>
+      <div class="header-actions">
+        <el-button type="primary" @click="openCreateSupplierDialog">+ 新建作业方</el-button>
+        <el-input v-model="searchValue" clearable placeholder="搜索作业方名称" style="width: 200px;" />
+        <el-button type="primary" @click="refreshSupplierList">筛选</el-button>
       </div>
+    </div>
 
-      <!-- 表格区域 -->
-      <el-table :data="tableData" style="width: 100%;border-radius: 10px;">
-        <el-table-column prop="name" label="作业方名称"></el-table-column>
-        <el-table-column prop="supplierName" label="联系人 (联系方式)">
-           <template #default="scope">
-            <view>{{ scope.row.contactUser }} ({{ scope.row.contactPhone }})</view>
-          </template>
-        </el-table-column>
-        <!-- <el-table-column label="状态">
+    <!-- 表格区域 -->
+    <el-table :data="tableData" style="width: 100%;border-radius: 10px;">
+      <el-table-column prop="name" label="作业方名称"></el-table-column>
+      <el-table-column prop="supplierName" label="联系人 (联系方式)">
+        <template #default="scope">
+          <view>{{ scope.row.contactUser }} ({{ scope.row.contactPhone }})</view>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="状态">
           <template #default="scope">
             <el-tag :type="getStatusTagType(scope.row.enabled)">{{ scope.row.enabled ? '可用' : '禁用' }}</el-tag>
           </template>
         </el-table-column> -->
 
-        <!-- 操作 -->
-         <el-table-column label="操作" fixed="right" width="450">
-          <template #default="scope">
-            <el-button type="info" size="mini" @click="">查看作业船舶</el-button>
-            <el-button type="info" size="mini" @click="">查看资质文件</el-button>
-              <el-button type="danger" size="mini" @click="">删除</el-button>
-          </template>
-        </el-table-column>
+      <!-- 操作 -->
+      <el-table-column label="操作" fixed="right" width="450">
+        <template #default="scope">
+          <el-button type="info" size="mini" @click="">查看作业船舶</el-button>
+          <el-button type="info" size="mini" @click="">查看资质文件</el-button>
+          <el-button type="danger" size="mini" @click="onClickDelete(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
 
-      </el-table>
+    </el-table>
 
-      <!-- 分页区域 -->
-      <div class="pagination-area">
-        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
-          :page-sizes="[10, 20, 30, 40]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper"
-          :total="total" />
-        <!-- <div class="record-info">共 {{ total }} 条记录</div> -->
-      </div>
+    <!-- 分页区域 -->
+    <div class="pagination-area">
+      <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+        :page-sizes="[10, 20, 30, 40]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper"
+        :total="total" />
+      <!-- <div class="record-info">共 {{ total }} 条记录</div> -->
     </div>
+    <!-- 新建作业方弹窗 -->
+    <el-dialog v-model="createDialogVisible" title="新建作业方" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="作业方名称">
+          <el-input v-model="newSupplier.name" placeholder="请输入作业方名称" />
+        </el-form-item>
+        <el-form-item label="联系人">
+          <el-input v-model="newSupplier.contactUser" placeholder="请输入联系人" />
+        </el-form-item>
+        <el-form-item label="联系电话">
+          <el-input v-model="newSupplier.contactPhone" placeholder="请输入联系电话" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelCreate">取消</el-button>
+          <el-button type="primary" :loading="createLoading" @click="confirmCreateSupplier">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { getSupplierList } from '@/api/entrustOrder';
-import { enableUser, getAppUserList } from '@/api/userApi';
+import { addSupplier, deleteSupplier, getSupplierList } from '@/api/entrustOrder';
+import { enableUser } from '@/api/userApi';
 import type { SupplierInfo } from '@/types/order';
 import { onMounted, ref, watch } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 表格数据
 const tableData = ref<SupplierInfo[]>([]);
@@ -59,14 +81,6 @@ const searchValue = ref('');
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-
-// 根据服务状态获取标签类型
-const getStatusTagType = (enabled: boolean) => {
-  if (enabled === true) {
-    return 'success';
-  }
-  return 'warning';
-};
 
 onMounted(() => {
   refreshSupplierList();
@@ -98,7 +112,7 @@ const handleEnableUser = async (userId: number, enabled: boolean) => {
     userType: 2
   };
   enableUser(params).then((res: any) => {
-      refreshSupplierList();
+    refreshSupplierList();
   });
 };
 
@@ -110,6 +124,73 @@ const handleSizeChange = (val: number) => {
 const handleCurrentChange = (val: number) => {
   currentPage.value = val;
   refreshSupplierList();
+};
+
+// 创建作业方弹窗与逻辑
+const createDialogVisible = ref(false);
+const createLoading = ref(false);
+const newSupplier = ref<{ name: string; contactUser: string; contactPhone: string }>({
+  name: '',
+  contactUser: '',
+  contactPhone: ''
+});
+
+const openCreateSupplierDialog = () => {
+  createDialogVisible.value = true;
+};
+
+const resetCreateForm = () => {
+  newSupplier.value = { name: '', contactUser: '', contactPhone: '' };
+};
+
+const cancelCreate = () => {
+  resetCreateForm();
+  createDialogVisible.value = false;
+};
+
+const confirmCreateSupplier = async () => {
+  const { name, contactUser, contactPhone } = newSupplier.value;
+  if (!name?.trim()) {
+    ElMessage.error('请填写作业方名称');
+    return;
+  }
+  if (!contactUser?.trim()) {
+    ElMessage.error('请填写联系人');
+    return;
+  }
+  if (!contactPhone?.trim()) {
+    ElMessage.error('请填写联系电话');
+    return;
+  }
+  try {
+    createLoading.value = true;
+    const params = { name: name.trim(), contactUser: contactUser.trim(), contactPhone: contactPhone.trim() };
+    addSupplier(params).then(() => {
+      ElMessage.success('创建成功');
+      createDialogVisible.value = false;
+      resetCreateForm();
+      refreshSupplierList();
+    });
+
+  } finally {
+    createLoading.value = false;
+  }
+};
+
+// 删除作业方
+const onClickDelete = (row: SupplierInfo) => {
+  ElMessageBox.confirm(`确认删除作业方“${row.name}”？`, '提示', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+    .then(async () => {
+      deleteSupplier({ id: row.id }).then(() => {
+        ElMessage.success('删除成功');
+        refreshSupplierList();
+      });
+
+    })
 };
 </script>
 
