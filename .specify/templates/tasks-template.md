@@ -20,10 +20,8 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- **Vue3前端项目**: `src/`, `tests/` at repository root，使用推荐的项目结构
+- 路径规范：使用Vue3前端项目结构标准
 
 <!-- 
   ============================================================================
@@ -48,9 +46,9 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T001 创建Vue3项目结构（components、views、composables等目录）
+- [ ] T002 初始化Vue3项目依赖（Vue3.3+、ElementPlus3.0+、TypeScript5.0+、Vite4.0+、Vitest）
+- [ ] T003 [P] 配置代码质量工具（ESLint、Prettier、TypeScript严格模式）
 
 ---
 
@@ -60,14 +58,14 @@ description: "Task list template for feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-Examples of foundational tasks (adjust based on your project):
+Vue3前端项目基础任务示例：
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T004 配置Vue Router路由结构
+- [ ] T005 [P] 实现Pinia状态管理配置
+- [ ] T006 [P] 配置ElementPlus主题和全局样式
+- [ ] T007 创建TypeScript类型定义结构
+- [ ] T008 配置API请求基础设施（Axios、错误处理、拦截器）
+- [ ] T009 配置环境变量管理（Vite环境配置）
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -83,17 +81,17 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T010 [P] [US1] 组件单元测试在 tests/unit/[ComponentName].spec.ts
+- [ ] T011 [P] [US1] 用户流程集成测试在 tests/integration/test_[featureName].ts
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T012 [P] [US1] 创建TypeScript类型定义在 src/types/[featureName].ts
+- [ ] T013 [P] [US1] 创建组合函数在 src/composables/use[featureName].ts
+- [ ] T014 [US1] 创建页面组件在 src/views/[PageName].vue (depends on T012, T013)
+- [ ] T015 [US1] 创建业务组件在 src/components/business/[ComponentName].vue
+- [ ] T016 [US1] 添加表单验证和错误处理
+- [ ] T017 [US1] 添加用户故事1的操作日志
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
