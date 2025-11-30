@@ -27,6 +27,7 @@
       <!-- 操作 -->
       <el-table-column label="操作" fixed="right" width="450">
         <template #default="scope">
+          <el-button type="primary" size="mini" @click="handleAddUser(scope.row)">新增用户</el-button>
           <el-button type="info" size="mini" @click="">查看作业船舶</el-button>
           <el-button type="info" size="mini" @click="">查看资质文件</el-button>
           <el-button type="danger" size="mini" @click="onClickDelete(scope.row)">删除</el-button>
@@ -62,15 +63,52 @@
         </div>
       </template>
     </el-dialog>
+    <!-- 新增作业方用户弹窗 -->
+    <el-dialog
+      v-model="addUserDialogVisible"
+      title="新增作业方用户"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+       <!-- 添加隐藏的输入字段来欺骗浏览器自动填充 -->
+       <input type="text" style="display: none;" />
+    <input type="password" style="display: none;" />
+
+      <el-form :model="userForm" label-width="100px">
+        <el-form-item label="手机号*">
+          <el-input v-model="userForm.phone" autocomplete="off"  placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-input v-model="userForm.userName" autocomplete="off"  placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item  label="密码*">
+          <el-input 
+            v-model="userForm.password" 
+            placeholder="请输入密码" 
+            type="password"
+            autocomplete="new-password" 
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelAddUser">取消</el-button>
+          <el-button type="primary" :loading="addUserLoading" @click="confirmAddUser">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { addSupplier, deleteSupplier, getSupplierList } from '@/api/entrustOrder';
-import { enableUser } from '@/api/userApi';
+import { enableUser, addSupplierUser } from '@/api/userApi';
 import type { SupplierInfo } from '@/types/order';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { md5 } from 'js-md5';
+import router from '@/router';
 
 // 表格数据
 const tableData = ref<SupplierInfo[]>([]);
@@ -105,16 +143,6 @@ const refreshSupplierList = async () => {
   });
 };
 
-const handleEnableUser = async (userId: number, enabled: boolean) => {
-  let params = {
-    userId: userId,
-    enabled: enabled,
-    userType: 2
-  };
-  enableUser(params).then((res: any) => {
-    refreshSupplierList();
-  });
-};
 
 // 分页方法
 const handleSizeChange = (val: number) => {
@@ -191,6 +219,80 @@ const onClickDelete = (row: SupplierInfo) => {
       });
 
     })
+};
+
+// 新增用户相关
+const addUserDialogVisible = ref(false);
+const addUserLoading = ref(false);
+const currentSupplierId = ref<number>(0);
+const userForm = reactive({
+  phone: '',
+  userName: '',
+  password: ''
+});
+
+
+// 处理新增用户
+const handleAddUser = (row: SupplierInfo) => {
+  currentSupplierId.value = row.id;
+  resetUserForm();
+  addUserDialogVisible.value = true;
+};
+
+// 重置用户表单
+const resetUserForm = () => {
+  userForm.phone = '';
+  userForm.userName = '';
+  userForm.password = '';
+};
+
+// 取消新增用户
+const cancelAddUser = () => {
+  resetUserForm();
+  addUserDialogVisible.value = false;
+};
+
+// 确认新增用户
+const confirmAddUser = async () => {
+  // 表单验证
+  if (!userForm.phone?.trim()) {
+    ElMessage.warning('请输入手机号');
+    return;
+  }
+  // 简单的手机号格式验证
+  if (!/^1[3-9]\d{9}$/.test(userForm.phone.trim())) {
+    ElMessage.warning('请输入有效的手机号');
+    return;
+  }
+  if (!userForm.password?.trim()) {
+    ElMessage.warning('请输入密码');
+    return;
+  }
+  if (userForm.password.trim().length < 6) {
+    ElMessage.warning('密码长度至少为6位');
+    return;
+  }
+
+  try {
+    addUserLoading.value = true;
+    // 构建请求参数，对密码进行MD5加密
+    const params = {
+      phone: userForm.phone.trim(),
+      userName: userForm.userName.trim(),
+      password: md5(userForm.password.trim()),
+      supplierId: currentSupplierId.value
+    };
+
+    // 调用新增用户接口
+    addSupplierUser(params).then(() => {
+      ElMessage.success('新增用户成功');
+      addUserDialogVisible.value = false;
+      cancelAddUser();
+      router.push('/user-management/supplierUserList')
+    });
+  } finally {
+    addUserLoading.value = false;
+  }
 };
 </script>
 

@@ -21,3 +21,15 @@ export const getAdminUserList = async (params:any) => {
 export const enableUser = async (params:any) => {
   return post("/user/enableUser", params);
 };
+
+export const addSupplierUser = async (params: any) => {
+  return post("/supplier/addUser", params);
+};
+
+export const addAdminUser = async (params: any) => {
+  return post("/user/addAdminUser", params);
+};
+
+export const updatePwd = async (params: any) => {
+  return post("/user/updatePwd", params);
+};

@@ -4,7 +4,7 @@
     <div class="page-header">
       <h1>作业管理</h1>
       <div class="header-actions">
-        <el-button type="primary" @click="handleCreate">新建作业</el-button>
+        <el-button type="primary" @click="handleCreate">+ 新建作业</el-button>
         <el-button>一键导出</el-button>
       </div>
     </div>
@@ -32,14 +32,15 @@
 
     <!-- 表格区域 -->
     <el-table :data="tableData" style="width: 100%;border-radius: 10px;">
-      <el-table-column label="船方公司">
+      <el-table-column prop="orderNo" label="作业编号" width="150"/>
+      <el-table-column label="船方公司" width="120">
         <template #default="scope">
           <view style="color: #333333; font-weight: 500;">
             {{ scope.row.shipownerInfo?.companyName }}
           </view>
         </template>
       </el-table-column>
-      <el-table-column label="船方联系人">
+      <el-table-column label="船方联系人" width="100">
         <template #default="scope">
           {{ scope.row.shipownerInfo?.contactPerson }}
         </template>
@@ -54,7 +55,7 @@
           {{ scope.row.supplier?.name }}
         </template>
       </el-table-column>
-      <el-table-column label="作业方联系人">
+      <el-table-column label="作业方联系人" width="180">
         <template #default="scope">
           <view v-if="scope.row.supplier">
             {{ scope.row.supplier.contactUser + ' ' + scope.row.supplier.contactPhone }}
@@ -62,7 +63,7 @@
 
         </template>
       </el-table-column>
-      <el-table-column label="作业船信息">
+      <el-table-column label="作业船信息" width="150">
         <template #default="scope">
           {{ scope.row.operationInfo?.shipName }}
         </template>
@@ -72,7 +73,9 @@
           <el-tag :type="getStatusTagType(scope.row.status)">{{ getStatusName(scope.row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作">
+      <el-table-column prop="createTime" label="创建时间" width="150"/>
+
+      <el-table-column label="操作" fixed="right" width="200">
         <template #default="scope">
           <el-button type="text" @click="handleViewDetail(scope.row)">查看详情</el-button>
           <el-button v-if="scope.row.status === 2" type="text" @click="openAssignDialog(scope.row)">委派</el-button>

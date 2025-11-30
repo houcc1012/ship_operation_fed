@@ -34,9 +34,6 @@ export const useUserStore = defineStore("user", {
         this.roleType = data.roleType;
         this.phone = data.phone;
         this.avatar = data.avatar;
-        this.accountType = data.accountType;
-        this.editionExpiredDate = data.editionExpiredDate;
-        this.showAppMngMenu = data.showAppMngMenu;
         //displayName过长时截取前10位
         if (this.displayName && this.displayName.length > 8) {
           this.displayName = this.displayName.substring(0, 5) + "...";
@@ -48,8 +45,7 @@ export const useUserStore = defineStore("user", {
       this.displayName = "";
       this.userInfo = null;
       this.roleType = 0;
-      this.accountType = 1;
-      Cookies.remove("vps_token");
+      Cookies.remove("ship_token");
     },
   },
 });
