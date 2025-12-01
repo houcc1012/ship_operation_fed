@@ -245,11 +245,12 @@ const confirmBatchExport = async () => {
     return;
   }
   try {
-    await batchExportOrders({ entrustOrderIds: selectedExportIds.value });
-    ElMessage.success('已提交导出任务');
-    exportMode.value = false;
-    selectedExportIds.value = [];
-    router.push('/system-management/export-task-list');
+    batchExportOrders({ entrustOrderIds: selectedExportIds.value }).then(res => {
+        ElMessage.success('已提交导出任务');
+        exportMode.value = false;
+        selectedExportIds.value = [];
+        router.push('/system-management/export-task-list');
+    });
   } catch (e) {
     ElMessage.error('导出失败，请稍后重试');
   }
