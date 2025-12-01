@@ -5,7 +5,9 @@
       <h1>作业管理</h1>
       <div class="header-actions">
         <el-button type="primary" @click="handleCreate">+ 新建作业</el-button>
-        <el-button>一键导出</el-button>
+        <el-button v-if="!exportMode" @click="startExportMode">一键导出</el-button>
+        <el-button v-else type="danger" @click="cancelExportMode">取消导出</el-button>
+        <el-button v-if="exportMode" type="primary" :disabled="selectedExportIds.length === 0" @click="confirmBatchExport">确认导出 ({{ selectedExportIds.length }})</el-button>
       </div>
     </div>
 
@@ -31,7 +33,8 @@
     </div>
 
     <!-- 表格区域 -->
-    <el-table :data="tableData" style="width: 100%;border-radius: 10px;">
+    <el-table :data="tableData" style="width: 100%;border-radius: 10px;" @selection-change="onSelectionChange">
+      <el-table-column v-if="exportMode" type="selection" width="55" />
       <el-table-column prop="orderNo" label="作业编号" width="150"/>
       <el-table-column label="船方公司" width="120">
         <template #default="scope">
@@ -125,10 +128,11 @@
 </template>
 
 <script setup lang="ts">
-import { assignSupplier, getEntrustOrderList, getSupplierList } from '@/api/entrustOrder';
+import { assignSupplier, batchExportOrders, getEntrustOrderList, getSupplierList } from '@/api/entrustOrder';
 import type { SupplierInfo } from '@/types/order';
 import { onMounted, ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
 
 // 表格数据
 const tableData = ref([]);
@@ -218,6 +222,38 @@ watch(
     refreshOrderList();
   }
 );
+
+// 导出选择模式
+const exportMode = ref(false);
+const selectedExportIds = ref<number[]>([]);
+
+const startExportMode = () => {
+  exportMode.value = true;
+  selectedExportIds.value = [];
+};
+const cancelExportMode = () => {
+  exportMode.value = false;
+  selectedExportIds.value = [];
+};
+const onSelectionChange = (rows: any[]) => {
+  selectedExportIds.value = rows.map(r => r.id);
+};
+
+const confirmBatchExport = async () => {
+  if (selectedExportIds.value.length === 0) {
+    ElMessage.warning('请先选择需要导出的作业单');
+    return;
+  }
+  try {
+    await batchExportOrders({ entrustOrderIds: selectedExportIds.value });
+    ElMessage.success('已提交导出任务');
+    exportMode.value = false;
+    selectedExportIds.value = [];
+    router.push('/system-management/export-task-list');
+  } catch (e) {
+    ElMessage.error('导出失败，请稍后重试');
+  }
+};
 
 const refreshOrderList = async () => {
   let params = {
@@ -340,3 +376,4 @@ const handleConfirmAssign = () => {
   margin-bottom: 10px;
 }
 </style>
+

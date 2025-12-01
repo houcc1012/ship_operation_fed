@@ -53,4 +53,13 @@ export const assignSupplier = async (params: any) => {
 };
 
 
+export const getExportTaskList = async (params: any) => {
+  return post("/export/taskList", params);
+};
+
+export const batchExportOrders = async (params: any) => {
+  return post("/export/batchExportOrders", params);
+};
+
+
 

@@ -76,6 +76,12 @@ const router = createRouter({
               name: 'DataDictList',
               component: () => import('@/views/DataDictList.vue'),
               meta: { requiresAuth: true, title: '数据字典列表' }
+            },
+            {
+              path: 'export-task-list',
+              name: 'ExportTaskList',
+              component: () => import('@/views/ExportTaskList.vue'),
+              meta: { requiresAuth: true, title: '导出任务列表' }
             }
           ]
         }

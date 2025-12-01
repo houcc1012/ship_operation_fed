@@ -59,9 +59,9 @@
             <!-- <el-icon><Tools /></el-icon> -->
             <template #title>数据字典</template>
           </el-menu-item>
-          <el-menu-item style="margin-left: 20px;" index="/system-management/logs">
+          <el-menu-item style="margin-left: 20px;" index="/system-management/export-task-list">
             <!-- <el-icon><Document /></el-icon> -->
-            <template #title>操作日志</template>
+            <template #title>导出任务</template>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>

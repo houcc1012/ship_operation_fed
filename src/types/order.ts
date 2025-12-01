@@ -94,3 +94,12 @@ export interface SupplierContact{
     phone: string;
 
 }
+
+export interface ExportTask{
+    taskNo: string;
+    status: number;//0-未执行 1-执行中 2成功 3-失败
+    createTime:string;
+    errorInfo: string;
+    entrustOrderNoList: string[];// 导出的订单编号
+    fileResource?: FileResourceInfo;
+}
