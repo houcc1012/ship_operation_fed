@@ -4,7 +4,7 @@
       <div class="page-header">
         <h1>船方/代理用户</h1>
         <div class="header-actions">
-          <el-input v-model="searchValue" placeholder="搜索手机号" style="width: 200px;" />
+          <el-input v-model="searchValue" clearable placeholder="搜索手机号" style="width: 200px;" />
           <el-button type="primary" @click="refreshUserList">筛选</el-button>
         </div>
       </div>

@@ -5,7 +5,7 @@
         <h1>运营后台用户</h1>
         <div class="header-actions">
           <el-button type="primary" @click="handleAddUser">+ 新增用户</el-button>
-          <el-input v-model="searchValue" placeholder="搜索账号或昵称" style="width: 200px;" />
+          <el-input v-model="searchValue" clearable placeholder="搜索账号或昵称" style="width: 200px;" />
           <el-button type="primary" @click="refreshUserList">筛选</el-button>
         </div>
       </div>

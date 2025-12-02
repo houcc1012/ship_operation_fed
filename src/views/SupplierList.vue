@@ -29,7 +29,7 @@
         <template #default="scope">
           <el-button type="primary" size="mini" @click="handleAddUser(scope.row)">新增用户</el-button>
           <el-button type="info" size="mini" @click="handleViewShips(scope.row)">作业船舶</el-button>
-          <el-button type="info" size="mini" @click="handleViewQualification(scope.row)">查看资质文件</el-button>
+          <el-button type="info" size="mini" @click="handleViewQualification(scope.row)">资质文件</el-button>
           <el-button type="danger" size="mini" @click="onClickDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>

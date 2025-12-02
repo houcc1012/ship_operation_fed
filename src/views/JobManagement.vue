@@ -29,7 +29,7 @@
           value-format="YYYY-MM-DD" />
       </div>
 
-      <el-input v-model="searchValue" placeholder="搜索作业..." style="width: 200px;" />
+      <el-input v-model="searchValue" clearable placeholder="搜索作业..." style="width: 200px;" />
     </div>
 
     <!-- 表格区域 -->
