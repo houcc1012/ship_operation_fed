@@ -35,7 +35,7 @@
     <!-- 表格区域 -->
     <el-table :data="tableData" style="width: 100%;border-radius: 10px;" @selection-change="onSelectionChange">
       <el-table-column v-if="exportMode" type="selection" width="55" />
-      <el-table-column prop="orderNo" label="作业编号" width="150"/>
+      <el-table-column prop="orderNo" label="作业编号" width="140"/>
       <el-table-column label="船方公司" width="120">
         <template #default="scope">
           <view style="color: #333333; font-weight: 500;">
@@ -53,6 +53,12 @@
           {{ scope.row.shipInfo?.enName + ' ' + scope.row.shipInfo?.cnName }}
         </template>
       </el-table-column>
+      <el-table-column label="服务状态" width="100">
+        <template #default="scope">
+          <el-tag :type="getStatusTagType(scope.row.status)">{{ getStatusName(scope.row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+
       <el-table-column label="作业方">
         <template #default="scope">
           {{ scope.row.supplier?.name }}
@@ -71,18 +77,18 @@
           {{ scope.row.operationInfo?.shipName }}
         </template>
       </el-table-column>
-      <el-table-column label="服务状态">
-        <template #default="scope">
-          <el-tag :type="getStatusTagType(scope.row.status)">{{ getStatusName(scope.row.status) }}</el-tag>
-        </template>
-      </el-table-column>
+      <el-table-column prop="closeDesc" label="操作说明" width="150"/>
       <el-table-column prop="createTime" label="创建时间" width="150"/>
 
-      <el-table-column label="操作" fixed="right" width="200">
+      <el-table-column label="操作" fixed="right" width="250">
         <template #default="scope">
-          <el-button type="text" @click="handleViewDetail(scope.row)">查看详情</el-button>
+          <el-button type="text" @click="handleViewDetail(scope.row)">详情</el-button>
+        
+          <!-- #e6a23c -->
           <el-button v-if="scope.row.status === 2" type="text" @click="openAssignDialog(scope.row)">委派</el-button>
           <el-button v-if="scope.row.status === 3" type="text" @click="openAssignDialog(scope.row)">重新委派</el-button>
+          <el-button v-if="scope.row.status === 1|| scope.row.status === 2" type="text" style="color: #e6a23c;" @click="openCloseDialog(scope.row)">关闭</el-button>
+          <el-button v-if="scope.row.status === 3 || scope.row.status === 4 || scope.row.status === 5" type="text" style="color: #f56c6c;" @click="openAbnormalDialog(scope.row)">标记异常</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -126,10 +132,25 @@
     </template>
   </el-dialog>
 
+  <!-- 关闭/异常说明弹窗 -->
+  <el-dialog v-model="closeDialogVisible" :title="closeDialogStatus === 6 ? '关闭作业单' : '标记异常'" width="600px" :close-on-click-modal="false">
+    <el-form label-width="100px">
+      <!-- <el-form-item :label="closeDialogStatus === 6 ? '关闭说明' : '异常说明'"> -->
+        <el-input v-model="closeDesc" type="textarea" :rows="4" maxlength="300" show-word-limit placeholder="请填写说明" />
+      <!-- </el-form-item> -->
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="closeDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="closeSubmitting" @click="confirmCloseOrAbnormal">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
 </template>
 
 <script setup lang="ts">
-import { assignSupplier, batchExportOrders, getEntrustOrderList, getSupplierList } from '@/api/entrustOrder';
+import { assignSupplier, batchExportOrders, getEntrustOrderList, getSupplierList, closeOrder } from '@/api/entrustOrder';
 import type { SupplierInfo } from '@/types/order';
 import { onMounted, ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -325,6 +346,51 @@ const handleConfirmAssign = () => {
     selectedSupplierId.value = null;
     refreshOrderList();
   });
+};
+
+// 关闭/异常弹窗逻辑
+const closeDialogVisible = ref(false);
+const closeDialogStatus = ref<number>(6); // 6 关闭, 7 异常
+const closeDesc = ref('');
+const closeTargetOrderId = ref<number | null>(null);
+const closeSubmitting = ref(false);
+
+const openCloseDialog = (row: any) => {
+  closeDialogStatus.value = 6;
+  closeTargetOrderId.value = row.id;
+  closeDesc.value = '';
+  closeDialogVisible.value = true;
+};
+
+const openAbnormalDialog = (row: any) => {
+  closeDialogStatus.value = 7;
+  closeTargetOrderId.value = row.id;
+  closeDesc.value = '';
+  closeDialogVisible.value = true;
+};
+
+const confirmCloseOrAbnormal = async () => {
+  if (!closeTargetOrderId.value) {
+    closeDialogVisible.value = false;
+    return;
+  }
+  try {
+    closeSubmitting.value = true;
+    const params = {
+      entrustOrderId: closeTargetOrderId.value,
+      status: closeDialogStatus.value,
+      closeDesc: closeDesc.value?.trim() || ''
+    };
+    closeOrder(params).then(() => {
+      ElMessage.success(closeDialogStatus.value === 6 ? '已关闭作业单' : '已标记异常');
+      closeDialogVisible.value = false;
+      closeTargetOrderId.value = null;
+      closeDesc.value = '';
+      refreshOrderList();
+    });
+  } finally {
+    closeSubmitting.value = false;
+  }
 };
 </script>
 
