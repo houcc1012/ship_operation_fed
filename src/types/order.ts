@@ -61,6 +61,8 @@ export interface SupplierInfo{
     name: string; // 作业方名称
     contactUser: string; // 联系人
     contactPhone: string; // 联系电话
+    qualificationResList?: FileResourceInfo[];// 资质文件资源列表
+
 }
 
 export interface SupplierShipInfo{

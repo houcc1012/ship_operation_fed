@@ -25,11 +25,11 @@
         </el-table-column> -->
 
       <!-- 操作 -->
-      <el-table-column label="操作" fixed="right" width="450">
+      <el-table-column label="操作" fixed="right" width="520">
         <template #default="scope">
           <el-button type="primary" size="mini" @click="handleAddUser(scope.row)">新增用户</el-button>
-          <el-button type="info" size="mini" @click="">查看作业船舶</el-button>
-          <el-button type="info" size="mini" @click="">查看资质文件</el-button>
+          <el-button type="info" size="mini" @click="handleViewShips(scope.row)">作业船舶</el-button>
+          <el-button type="info" size="mini" @click="handleViewQualification(scope.row)">查看资质文件</el-button>
           <el-button type="danger" size="mini" @click="onClickDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -98,13 +98,61 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 作业船舶列表弹窗 -->
+    <el-dialog v-model="supplierShipDialogVisible" title="作业船舶" width="720px">
+      <div style="margin-bottom: 12px; color:#606266;">作业方：{{ currentSupplierNameForShips }}</div>
+      <el-table :data="supplierShipList" border style="width: 100%;min-height: 120px;">
+        <el-table-column prop="companyName" label="所属公司" min-width="160" />
+        <el-table-column prop="cnName" label="中文名" min-width="140" />
+        <el-table-column prop="enName" label="英文名" min-width="140" />
+        <el-table-column prop="captainName" label="船长" min-width="120" />
+        <el-table-column prop="captainPhone" label="联系方式" min-width="140" />
+      </el-table>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="supplierShipDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 资质文件弹窗 -->
+    <el-dialog v-model="qualificationDialogVisible" title="资质文件" width="720px" :close-on-click-modal="false">
+      <div style="margin-bottom: 12px; color:#606266;">作业方：{{ currentSupplierNameForQualification }}</div>
+      <el-table :data="qualificationList" border style="width: 100%;min-height: 120px;">
+        <el-table-column prop="resourceName" label="资源名称" min-width="180" />
+        <el-table-column label="文件名" min-width="220">
+          <template #default="scope">
+            <el-link :href="scope.row.url" target="_blank" type="primary">{{ scope.row.fileName }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120">
+          <template #default="scope">
+            <el-button type="danger" size="small" @click="deleteQualificationFile(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 12px;">
+        <el-button type="primary" @click="triggerQualificationFileInput">选择文件</el-button>
+        <span v-if="selectedQualificationFileName" style="color:#606266;">已选：{{ selectedQualificationFileName }}</span>
+        <input ref="qualificationFileInputRef" type="file" accept="image/*,.pdf" style="display:none" @change="onQualificationFileChange" />
+        <el-button type="success" :disabled="!selectedQualificationFile" @click="confirmQualificationUpload">上传</el-button>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="qualificationDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="saveQualificationChanges">保存</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { addSupplier, deleteSupplier, getSupplierList } from '@/api/entrustOrder';
+import { addSupplier, deleteSupplier, getSupplierList, getSupplierShipList, updateSupplierQualification } from '@/api/entrustOrder';
+import { uploadFile } from '@/api/fileApi';
 import { enableUser, addSupplierUser } from '@/api/userApi';
-import type { SupplierInfo } from '@/types/order';
+import type { SupplierInfo, SupplierShipInfo, FileResourceInfo } from '@/types/order';
 import { onMounted, reactive, ref, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { md5 } from 'js-md5';
@@ -293,6 +341,129 @@ const confirmAddUser = async () => {
   } finally {
     addUserLoading.value = false;
   }
+};
+
+// 查看作业船舶
+const supplierShipDialogVisible = ref(false);
+const supplierShipList = ref<SupplierShipInfo[]>([]);
+const currentSupplierIdForShips = ref<number | null>(null);
+const currentSupplierNameForShips = ref<string>('');
+
+const handleViewShips = (row: SupplierInfo) => {
+  currentSupplierIdForShips.value = row.id;
+  currentSupplierNameForShips.value = row.name || '';
+  supplierShipDialogVisible.value = true;
+  fetchSupplierShips();
+};
+
+const fetchSupplierShips = async () => {
+  if (!currentSupplierIdForShips.value) {
+    ElMessage.warning('无法查询：缺少作业方ID');
+    return;
+  }
+  getSupplierShipList({ supplierId: currentSupplierIdForShips.value }).then((res: SupplierShipInfo[]) => {
+    supplierShipList.value = res || [];
+  });
+};
+
+// 查看资质文件
+const qualificationDialogVisible = ref(false);
+const qualificationList = ref<FileResourceInfo[]>([]);
+const originalQualificationIds = ref<number[]>([]);
+const currentSupplierIdForQualification = ref<number | null>(null);
+const currentSupplierNameForQualification = ref<string>('');
+
+const selectedQualificationFile = ref<File | null>(null);
+const qualificationFileInputRef = ref<HTMLInputElement | null>(null);
+const selectedQualificationFileName = ref<string>('');
+
+const triggerQualificationFileInput = () => {
+  qualificationFileInputRef.value?.click();
+};
+
+const onQualificationFileChange = (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0] || null;
+  selectedQualificationFile.value = file;
+  selectedQualificationFileName.value = file?.name || '';
+};
+
+const handleViewQualification = (row: SupplierInfo) => {
+  currentSupplierIdForQualification.value = row.id;
+  currentSupplierNameForQualification.value = row.name || '';
+  const list = row.qualificationResList || [];
+  qualificationList.value = [...list];
+  originalQualificationIds.value = list.map(item => item.resourceId);
+  selectedQualificationFile.value = null;
+  selectedQualificationFileName.value = '';
+  qualificationDialogVisible.value = true;
+};
+
+const deleteQualificationFile = (file: FileResourceInfo) => {
+  const idx = qualificationList.value.findIndex(f => f.resourceId === file.resourceId || (!!file.url && f.url === file.url));
+  if (idx >= 0) {
+    qualificationList.value.splice(idx, 1);
+  }
+};
+
+const confirmQualificationUpload = async () => {
+  if (!selectedQualificationFile.value) {
+    ElMessage.warning('请先选择文件');
+    return;
+  }
+  try {
+    // resourceName 为上传文件名去除扩展名
+    const name = selectedQualificationFile.value.name || '';
+    const resourceName = name.replace(/\.[^/.]+$/, '');
+    const extraParams: Record<string, any> = { resourceName };
+    const result = await uploadFile(selectedQualificationFile.value, extraParams) as FileResourceInfo;
+    qualificationList.value.push(result);
+    ElMessage.success('上传成功');
+    // 重置选择
+    selectedQualificationFile.value = null;
+    selectedQualificationFileName.value = '';
+  } catch (error) {
+    // 错误提示在 upload 内已处理
+  }
+};
+
+const arraysEqualIgnoreOrder = (a: number[], b: number[]) => {
+  if (a.length !== b.length) return false;
+  const sa = [...a].sort((x, y) => x - y);
+  const sb = [...b].sort((x, y) => x - y);
+  for (let i = 0; i < sa.length; i++) {
+    if (sa[i] !== sb[i]) return false;
+  }
+  return true;
+};
+
+const saveQualificationChanges = async () => {
+  const supplierId = currentSupplierIdForQualification.value;
+  if (!supplierId) {
+    ElMessage.warning('缺少作业方ID');
+    return;
+  }
+  const newIds = qualificationList.value.map(item => item.resourceId);
+  if (arraysEqualIgnoreOrder(newIds, originalQualificationIds.value)) {
+    // 无改动，直接关闭
+    qualificationDialogVisible.value = false;
+    return;
+  }
+  const params = { supplierId, qualificationResIdList: newIds };
+  updateSupplierQualification(params).then(() => {
+    ElMessage.success('保存成功');
+    qualificationDialogVisible.value = false;
+    // 保存后刷新列表，确保最新数据
+    refreshSupplierList();
+  });
+};
+
+const downloadQualificationFile = (file: FileResourceInfo) => {
+  if (!file?.url) {
+    ElMessage.warning('该文件缺少下载地址');
+    return;
+  }
+  window.open(file.url, '_blank');
 };
 </script>
 

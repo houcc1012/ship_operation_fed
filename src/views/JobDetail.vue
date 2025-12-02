@@ -257,7 +257,7 @@
                         </el-icon>
                     </div>
                     <div class="file-info">
-                        <div class="file-name">{{ file.fileName || file.resourceName }}</div>
+                        <div class="file-name">{{file.resourceName }}</div>
                         <el-row>
                             <div class="file-note" style="margin-right: 5px;">{{ (file.fileType || '').toLocaleUpperCase()
                                 }}

@@ -30,6 +30,12 @@ const router = createRouter({
           component: () => import('@/views/JobDetail.vue'),
           meta: { requiresAuth: true, title: '作业详情' }
         },
+                {
+          path: 'job-management/create',
+          name: 'CreateJob',
+          component: () => import('@/views/CreateJob.vue'),
+          meta: { requiresAuth: true, title: '创建作业' }
+        },
         {
           path: 'user-management',
           name: 'UserManagement',

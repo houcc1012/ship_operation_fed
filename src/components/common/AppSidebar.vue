@@ -44,9 +44,9 @@
             <template #title>运营后台用户</template>
           </el-menu-item>
         </el-sub-menu>
-
+      
         <el-menu-item index="/supplier-management">
-           <el-icon><Ship /></el-icon>
+           <el-icon><Coordinate /></el-icon>
           <template #title>作业方管理</template>
         </el-menu-item>
 
@@ -159,7 +159,8 @@ import {
   Document,
   Expand,
   Fold,
-  Edit
+  Edit,
+  Coordinate
 } from '@element-plus/icons-vue'
 import { md5 } from 'js-md5'
 

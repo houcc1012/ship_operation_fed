@@ -82,6 +82,7 @@
         <template #default="scope">
           <el-button type="text" @click="handleViewDetail(scope.row)">查看详情</el-button>
           <el-button v-if="scope.row.status === 2" type="text" @click="openAssignDialog(scope.row)">委派</el-button>
+          <el-button v-if="scope.row.status === 3" type="text" @click="openAssignDialog(scope.row)">重新委派</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -295,6 +296,7 @@ const handleCurrentChange = (val: number) => {
 const handleCreate = () => {
   // 新建作业逻辑
   console.log('新建作业');
+  router.push({ name: 'CreateJob' });
 };
 const handleViewDetail = (row: any) => {
   // 查看详情逻辑

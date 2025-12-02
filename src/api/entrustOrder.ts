@@ -9,6 +9,10 @@ export const updateEntrustOrder = async (params: any) => {
   return post("/entrustOrder/update", params);
 };
 
+export const addEntrustOrder = async (params: any) => {
+  return post("/entrustOrder/add", params);
+};
+
 export const getEntrustOrderDetail = async (params: any) => {
   return post("/entrustOrder/getDetail", params);
 };
@@ -37,6 +41,11 @@ export const getSupplierShipList = async (params: any) => {
 export const getSupplierContactList = async (params: any) => {
   return post("/supplier/contactList", params);
 };
+
+export const updateSupplierQualification = async (params: any) => {
+  return post("/supplier/updateQualification", params);
+};
+
 
 export const getShipownerList = async () => {
   return post("/shipowner/getShipownerList", {});
