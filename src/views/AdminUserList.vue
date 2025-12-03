@@ -100,6 +100,7 @@
 <script setup lang="ts">
 import { enableUser, getAdminUserList, getAppUserList, addAdminUser } from '@/api/userApi';
 import { ElMessage } from 'element-plus';
+import { md5 } from 'js-md5';
 import { onMounted, ref, watch } from 'vue';
 
 // 表格数据
@@ -136,19 +137,6 @@ const userFormRules = ref({
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
   ]
 });
-
-// MD5加密函数
-const md5 = (str: string): string => {
-  // 简单的MD5加密实现，实际项目中建议使用专业的加密库
-  let hash = 0;
-  if (str.length === 0) return hash.toString();
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(16).padStart(32, '0');
-};
 
 // 根据服务状态获取标签类型
 const getStatusTagType = (enabled: boolean) => {

@@ -13,7 +13,7 @@
       <el-table :data="tableData" style="width: 100%;border-radius: 10px;">
         <el-table-column  label="用户手机号码">
           <template #default="scope">
-            <view style="color: #333333;font-weight: 500;"> {{ scope.row.phone }}</view>
+            <view> {{ scope.row.phone }}</view>
           </template>
         </el-table-column>
         <el-table-column prop="organizationName" label="组织名称"></el-table-column>

@@ -52,8 +52,16 @@
                 <div class="info-item">
                     <span class="label">计划洗船位置</span>
                     <span class="value">
-                        <el-input v-model="editEntrustDetail.planWashParkLocation" :disabled="!isEditing"
-                            placeholder="计划洗船位置" />
+                        <el-select v-model="editEntrustDetail.planWashParkLocation" :disabled="!isEditing" placeholder="请选择计划洗船位置" style="width: 100%;">
+                            <el-option v-for="item in washShipParkLocationOptions" :key="item as string" :label="item as string" :value="item as string" />
+                        </el-select>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="label">清洗位置</span>
+                    <span class="value">
+                        <el-input v-model="editEntrustDetail.planWashShipPosition" :disabled="!isEditing"
+                            />
                     </span>
                 </div>
                 <div class="info-item">
@@ -68,7 +76,7 @@
                     <span class="label">船舶载货情况</span>
                     <span class="value">
                         <el-input v-model="editEntrustDetail.shipCargo" :disabled="!isEditing" type="text"
-                            placeholder="船舶载货情况" />
+                             />
                     </span>
                 </div>
             </div>
@@ -114,13 +122,13 @@
                 <div class="info-item">
                     <span class="label">作业公司名称</span>
                     <span class="value" style="display: inline-block; width: 100%;">
-                        <el-input v-model="operationCompanyDisplay" :disabled="!isEditing" placeholder="请输入作业公司名称" />
+                        <el-input v-model="operationCompanyDisplay" :disabled="!isEditing" />
                     </span>
                 </div>
                 <div class="info-item">
                     <span class="label">作业联系人</span>
                     <span class="value" style="display: inline-block; width: 100%;">
-                        <el-input v-model="operationContactDisplay" :disabled="!isEditing" placeholder="请选择作业联系人"
+                        <el-input v-model="operationContactDisplay" :disabled="!isEditing"
                             @focus="isEditing">
                             <template #suffix>
                                 <el-icon v-if="isEditing" style="cursor: pointer"
@@ -546,6 +554,17 @@ const washRequirementsModel = computed<string[]>({
     }
 });
 
+// 洗船位置类型
+const washShipParkLocationDict= ref<String[]>([]);
+// 扁平化位置字典，防止嵌套数组导致选项异常
+const washShipParkLocationOptions = computed(() => {
+    const raw: any = washShipParkLocationDict.value || [];
+    if (Array.isArray(raw) && raw.length > 0 && Array.isArray(raw[0])) {
+        return raw.flat();
+    }
+    return raw;
+});
+
 onMounted(() => {
     refreshOrderDetail();
     refreshShipownerList();
@@ -600,6 +619,7 @@ const refreshShipownerShipList = async () => {
 const refreshDataDictList = async () => {
     getDataDictList().then(res => {
         washShipRequirementDict.value = res.filter(item => item.dictName === '洗船需求').map(item => item.dictItems);
+        washShipParkLocationDict.value = res.filter(item => item.dictName === '洗船位置类型').map(item => item.dictItems);
     });
 };
 
