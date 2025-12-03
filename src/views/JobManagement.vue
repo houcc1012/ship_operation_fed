@@ -7,7 +7,8 @@
         <el-button type="primary" @click="handleCreate">+ 新建作业</el-button>
         <el-button v-if="!exportMode" @click="startExportMode">一键导出</el-button>
         <el-button v-else type="danger" @click="cancelExportMode">取消导出</el-button>
-        <el-button v-if="exportMode" type="primary" :disabled="selectedExportIds.length === 0" @click="confirmBatchExport">确认导出 ({{ selectedExportIds.length }})</el-button>
+        <el-button v-if="exportMode" type="primary" :disabled="selectedExportIds.length === 0"
+          @click="confirmBatchExport">确认导出 ({{ selectedExportIds.length }})</el-button>
       </div>
     </div>
 
@@ -35,7 +36,7 @@
     <!-- 表格区域 -->
     <el-table :data="tableData" style="width: 100%;border-radius: 10px;" @selection-change="onSelectionChange">
       <el-table-column v-if="exportMode" type="selection" width="55" />
-      <el-table-column prop="orderNo" label="作业编号" width="140"/>
+      <el-table-column prop="orderNo" label="作业编号" width="140" />
       <el-table-column label="船方公司" width="120">
         <template #default="scope">
           <view style="color: #333333; font-weight: 500;">
@@ -77,18 +78,26 @@
           {{ scope.row.operationInfo?.shipName }}
         </template>
       </el-table-column>
-      <el-table-column prop="closeDesc" label="操作说明" width="150"/>
-      <el-table-column prop="createTime" label="创建时间" width="150"/>
+      <el-table-column label="PM" width="160">
+        <template #default="scope">
+          <span>{{ scope.row.pm || " "}}</span>
+          <el-icon type="primary" @click="openPmEdit(scope.row)"><Edit /></el-icon>
+        </template>
+      </el-table-column>
+      <el-table-column prop="closeDesc" label="操作说明" width="150" />
+      <el-table-column prop="createTime" label="创建时间" width="150" />
 
       <el-table-column label="操作" fixed="right" width="210">
         <template #default="scope">
           <el-button type="text" @click="handleViewDetail(scope.row)">详情</el-button>
-        
+
           <!-- #e6a23c -->
           <el-button v-if="scope.row.status === 2" type="text" @click="openAssignDialog(scope.row)">委派</el-button>
           <el-button v-if="scope.row.status === 3" type="text" @click="openAssignDialog(scope.row)">重新委派</el-button>
-          <el-button v-if="scope.row.status === 1|| scope.row.status === 2" type="text" style="color: #e6a23c;" @click="openCloseDialog(scope.row)">关闭</el-button>
-          <el-button v-if="scope.row.status === 3 || scope.row.status === 4 || scope.row.status === 5" type="text" style="color: #f56c6c;" @click="openAbnormalDialog(scope.row)">标记异常</el-button>
+          <el-button v-if="scope.row.status === 1 || scope.row.status === 2" type="text" style="color: #e6a23c;"
+            @click="openCloseDialog(scope.row)">关闭</el-button>
+          <el-button v-if="scope.row.status === 3 || scope.row.status === 4 || scope.row.status === 5" type="text"
+            style="color: #f56c6c;" @click="openAbnormalDialog(scope.row)">标记异常</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -133,10 +142,11 @@
   </el-dialog>
 
   <!-- 关闭/异常说明弹窗 -->
-  <el-dialog v-model="closeDialogVisible" :title="closeDialogStatus === 6 ? '关闭作业单' : '标记异常'" width="600px" :close-on-click-modal="false">
+  <el-dialog v-model="closeDialogVisible" :title="closeDialogStatus === 6 ? '关闭作业单' : '标记异常'" width="600px"
+    :close-on-click-modal="false">
     <el-form label-width="100px">
       <!-- <el-form-item :label="closeDialogStatus === 6 ? '关闭说明' : '异常说明'"> -->
-        <el-input v-model="closeDesc" type="textarea" :rows="4" maxlength="300" show-word-limit placeholder="请填写说明" />
+      <el-input v-model="closeDesc" type="textarea" :rows="4" maxlength="300" show-word-limit placeholder="请填写说明" />
       <!-- </el-form-item> -->
     </el-form>
     <template #footer>
@@ -147,14 +157,31 @@
     </template>
   </el-dialog>
 
+  <!-- PM 编辑弹窗 -->
+  <el-dialog v-model="pmEditVisible" title="设置PM" width="400px" :close-on-click-modal="false">
+    <div v-if="pmDataList.length > 0">
+      <el-radio-group v-model="pmEditSelected">
+        <el-radio v-for="item in pmDataList" :key="item" :label="item">{{ item }}</el-radio>
+      </el-radio-group>
+    </div>
+    <div v-else style="color: #909399;">暂无可选项</div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="pmEditVisible = false">取消</el-button>
+        <el-button type="primary" :loading="pmSubmitting" @click="confirmPmEdit">保存</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
 </template>
 
 <script setup lang="ts">
-import { assignSupplier, batchExportOrders, getEntrustOrderList, getSupplierList, closeOrder } from '@/api/entrustOrder';
+import { assignSupplier, batchExportOrders, getEntrustOrderList, getSupplierList, closeOrder, updateOrderPM } from '@/api/entrustOrder';
 import type { SupplierInfo } from '@/types/order';
 import { onMounted, ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { getDataDictList } from '@/api/dataDictApi';
 
 // 表格数据
 const tableData = ref([]);
@@ -236,6 +263,7 @@ const getStatusName = (status: number) => {
 onMounted(() => {
   refreshOrderList();
   refreshSupplerList();
+  refreshDataDictList();
 });
 
 watch(
@@ -268,10 +296,10 @@ const confirmBatchExport = async () => {
   }
   try {
     batchExportOrders({ entrustOrderIds: selectedExportIds.value }).then(res => {
-        ElMessage.success('已提交导出任务');
-        exportMode.value = false;
-        selectedExportIds.value = [];
-        router.push('/system-management/export-task-list');
+      ElMessage.success('已提交导出任务');
+      exportMode.value = false;
+      selectedExportIds.value = [];
+      router.push('/system-management/export-task-list');
     });
   } catch (e) {
     ElMessage.error('导出失败，请稍后重试');
@@ -300,6 +328,15 @@ const refreshSupplerList = async () => {
   };
   getSupplierList(params).then((res: any) => {
     supplierList.value = res.data;
+  });
+};
+
+const pmDataList = ref<string[]>([]);
+
+const refreshDataDictList = async () => {
+  getDataDictList({}).then((res: any) => {
+    const pmDict = res.find((item: any) => item.dictName === 'PM');
+    pmDataList.value = Array.isArray(pmDict?.dictItems) ? pmDict.dictItems : [];
   });
 };
 
@@ -392,6 +429,42 @@ const confirmCloseOrAbnormal = async () => {
     closeSubmitting.value = false;
   }
 };
+
+// PM 编辑弹窗逻辑
+const pmEditVisible = ref(false);
+const pmEditTargetOrderId = ref<number | null>(null);
+const pmEditSelected = ref<string>('');
+const pmSubmitting = ref(false);
+
+const openPmEdit = (row: any) => {
+  pmEditTargetOrderId.value = row.id;
+  pmEditSelected.value = row.pm || '';
+  pmEditVisible.value = true;
+};
+
+const confirmPmEdit = async () => {
+  if (!pmEditTargetOrderId.value) {
+    pmEditVisible.value = false;
+    return;
+  }
+  if (!pmEditSelected.value) {
+    ElMessage.warning('请选择PM');
+    return;
+  }
+  try {
+    pmSubmitting.value = true;
+    updateOrderPM({ entrustOrderId: pmEditTargetOrderId.value, pm: pmEditSelected.value }).then(res => {
+      ElMessage.success('设置成功');
+      pmEditVisible.value = false;
+      pmEditTargetOrderId.value = null;
+      pmEditSelected.value = '';
+      refreshOrderList();
+    });
+
+  } finally {
+    pmSubmitting.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -445,4 +518,3 @@ const confirmCloseOrAbnormal = async () => {
   margin-bottom: 10px;
 }
 </style>
-

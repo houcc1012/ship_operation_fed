@@ -29,20 +29,27 @@
       <el-dialog
         v-model="dialogVisible"
         title="编辑数据字典"
-        width="500px"
+        width="520px"
         :close-on-click-modal="false"
       >
         <el-form :model="formData" label-width="100px">
           <el-form-item label="字典名称">
-            <el-input v-model="formData.dictName" placeholder="请输入字典名称" />
+            <el-input v-model="formData.dictName" disabled placeholder="请输入字典名称" />
           </el-form-item>
           <el-form-item label="字典值">
             <div v-for="(item, index) in formData.dictItems" :key="index" class="dict-item">
               <el-input
                 v-model="formData.dictItems[index]"
                 placeholder="请输入字典值"
-                style="width: 300px; margin-right: 10px;"
+                style="width: 260px; margin-right: 10px;"
               />
+              <!-- 仅当字典名称为 PM 时显示默认项选择 -->
+              <el-radio
+                v-if="formData.dictName === 'PM'"
+                v-model="defaultItemIndex"
+                :label="index"
+                style="margin-right: 10px;"
+              >默认</el-radio>
               <el-button type="danger" size="small" @click="removeDictItem(index)">删除</el-button>
             </div>
             <el-button type="primary" size="small" @click="addDictItem" style="margin-top: 10px;">添加字段值</el-button>
@@ -71,8 +78,12 @@ const dialogVisible = ref(false);
 const formData = reactive({
   id: 0,
   dictName: '',
+  defaultItemValue: '',
   dictItems: [] as string[]
 });
+
+// 当字典名称为 PM 时，用索引跟踪默认项，确保编辑值时默认项能同步
+const defaultItemIndex = ref<number>(-1);
 
 onMounted(() => {
   refreshDataDictList();
@@ -93,7 +104,15 @@ const handleEdit = (row: any) => {
   // 深拷贝数据到表单
   formData.id = row.id;
   formData.dictName = row.dictName;
+  formData.defaultItemValue = row.defaultItemValue;
   formData.dictItems = [...row.dictItems];
+  // 仅 PM 字典需要默认项选择，将默认值映射到索引
+  if (formData.dictName === 'PM') {
+    const idx = formData.dictItems.findIndex(v => v === formData.defaultItemValue);
+    defaultItemIndex.value = idx !== -1 ? idx : -1;
+  } else {
+    defaultItemIndex.value = -1;
+  }
   dialogVisible.value = true;
 };
 
@@ -105,6 +124,15 @@ const addDictItem = () => {
 // 移除字典值
 const removeDictItem = (index: number) => {
   formData.dictItems.splice(index, 1);
+  // 若删除的是默认项或删除项在默认项之前，更新默认项索引与默认值
+  if (formData.dictName === 'PM') {
+    if (defaultItemIndex.value === index) {
+      defaultItemIndex.value = -1;
+      formData.defaultItemValue = '';
+    } else if (defaultItemIndex.value > index) {
+      defaultItemIndex.value = defaultItemIndex.value - 1;
+    }
+  }
 };
 
 // 处理保存
@@ -124,10 +152,19 @@ const handleSave = async () => {
 
   try {
     // 构建请求参数
+    // 若为 PM 字典且选择了默认项，以当前索引对应值为默认值
+    if (formData.dictName === 'PM') {
+      if (defaultItemIndex.value >= 0 && defaultItemIndex.value < filteredDictItems.length) {
+        formData.defaultItemValue = filteredDictItems[defaultItemIndex.value] || '';
+      } else {
+        formData.defaultItemValue = '';
+      }
+    }
     const params = {
       id: formData.id,
       dictName: formData.dictName.trim(),
-      dictItems: filteredDictItems
+      dictItems: filteredDictItems,
+      defaultItemValue: formData.defaultItemValue.trim()
     };
 
     // 调用更新接口

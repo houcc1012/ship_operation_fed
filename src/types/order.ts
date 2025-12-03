@@ -12,6 +12,7 @@ export interface EntrustOrder {
     shipCargo:string;// 船舶载货情况
     lastWashDate:string;// 上次洗船日期
     closeDesc: string;// 关闭或异常说明述
+    pm: string;// 项目经理
     shipownerInfo: ShipownerInfo;// 船方基础信息
     shipInfo: ShipInfo;// 船舶信息
     supplierId?: number;// 作业方ID

@@ -65,6 +65,10 @@ export const closeOrder = async (params: any) => {
   return post("/entrustOrder/close", params);
 };
 
+export const updateOrderPM = async (params: any) => {
+  return post("/entrustOrder/updatePM", params);
+};
+
 
 export const getExportTaskList = async (params: any) => {
   return post("/export/taskList", params);

@@ -50,15 +50,15 @@
                     </span>
                 </div>
                 <div class="info-item">
-                    <span class="label">计划洗船位置</span>
+                    <span class="label">计划洗船位置类型</span>
                     <span class="value">
-                        <el-select v-model="editEntrustDetail.planWashParkLocation" :disabled="!isEditing" placeholder="请选择计划洗船位置" style="width: 100%;">
+                        <el-select v-model="editEntrustDetail.planWashParkLocation" :disabled="!isEditing"  style="width: 100%;">
                             <el-option v-for="item in washShipParkLocationOptions" :key="item as string" :label="item as string" :value="item as string" />
                         </el-select>
                     </span>
                 </div>
                 <div class="info-item">
-                    <span class="label">清洗位置</span>
+                    <span class="label">计划洗船位置</span>
                     <span class="value">
                         <el-input v-model="editEntrustDetail.planWashShipPosition" :disabled="!isEditing"
                             />
