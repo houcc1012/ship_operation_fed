@@ -154,11 +154,26 @@ const handleSave = async () => {
     // 构建请求参数
     // 若为 PM 字典且选择了默认项，以当前索引对应值为默认值
     if (formData.dictName === 'PM') {
-      if (defaultItemIndex.value >= 0 && defaultItemIndex.value < filteredDictItems.length) {
-        formData.defaultItemValue = filteredDictItems[defaultItemIndex.value] || '';
-      } else {
-        formData.defaultItemValue = '';
+      // 计算非空项在原数组中的索引映射，确保过滤后索引正确
+      const nonEmptyIndices = formData.dictItems
+        .map((v, i) => ({ v: v.trim(), i }))
+        .filter(t => t.v)
+        .map(t => t.i);
+
+      // 校验必须选择默认项
+      if (defaultItemIndex.value < 0) {
+        ElMessage.warning('请为 PM 字典选择一个默认值');
+        return;
       }
+
+      // 找到默认项在过滤后的位置
+      const filteredIndex = nonEmptyIndices.indexOf(defaultItemIndex.value);
+      if (filteredIndex < 0 || filteredIndex >= filteredDictItems.length) {
+        ElMessage.warning('默认字典值不能为空或已被删除');
+        return;
+      }
+
+      formData.defaultItemValue = filteredDictItems[filteredIndex] || '';
     }
     const params = {
       id: formData.id,
