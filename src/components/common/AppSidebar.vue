@@ -82,6 +82,7 @@
           </div>
           <!-- <el-button type="primary" size="small" @click="showUpdatePwdDialog = true">修改密码</el-button> -->
           <el-icon @click="showUpdatePwdDialog = true"><Edit/></el-icon>
+          <el-icon style="margin-left: 10px; color: red;" @click="handleLogout"><SwitchButton/></el-icon>
         </div>
       </div>
     </div>
@@ -160,6 +161,7 @@ import {
   Expand,
   Fold,
   Edit,
+  SwitchButton,
   Coordinate
 } from '@element-plus/icons-vue'
 import { md5 } from 'js-md5'
@@ -235,6 +237,15 @@ const handleMenuSelect = (index: string) => {
 
 const toggleCollapse = () => {
   collapsed.value = !collapsed.value
+}
+
+// 退出登录：清除缓存用户信息并跳转到登录页
+const handleLogout = () => {
+  try {
+    userStore.logout()
+  } finally {
+    router.push('/login')
+  }
 }
 
 // 重置密码表单
